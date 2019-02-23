@@ -1,5 +1,6 @@
+using InfraManagement.Services;
 using System;
-
+using System.Configuration;
 using Unity;
 
 namespace InfraManagement
@@ -42,6 +43,11 @@ namespace InfraManagement
 
             // TODO: Register your type's mappings here.
             // container.RegisterType<IProductRepository, ProductRepository>();
+
+            container.RegisterType<IPaymentGateway, AuthorizeDotNetService>( new Unity.Injection.InjectionConstructor( ConfigurationManager.AppSettings.Get("PaymentGateway.Login"),
+                ConfigurationManager.AppSettings.Get("PaymentGateway.Password"),
+                ConfigurationManager.AppSettings.Get("PaymentGateway.EndPoint")));
+
         }
     }
 }

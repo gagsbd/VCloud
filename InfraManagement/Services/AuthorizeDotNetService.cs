@@ -27,15 +27,15 @@ namespace InfraManagement.Services
             AuthResult result = new AuthResult() { IsAuthorized = false };
             try
             {
-                string authapilogin = "76xfD5Gua";
-                string transactionkey = "5h4LwUEb8nY88a76";
-                string URL = "https://apitest.authorize.net/xml/v1/request.api";
-                if (objcc.production)
-                {
-                    authapilogin = "76xfD5Gua";
-                    transactionkey = "5h4LwUEb8nY88a76";
-                    URL = "https://apitest.authorize.net/xml/v1/request.api";
-                }
+                //string authapilogin = "76xfD5Gua";
+                //string transactionkey = "5h4LwUEb8nY88a76";
+                //string URL = "https://apitest.authorize.net/xml/v1/request.api";
+                //if (objcc.production)
+                //{
+                //    authapilogin = "76xfD5Gua";
+                //    transactionkey = "5h4LwUEb8nY88a76";
+                //    URL = "https://apitest.authorize.net/xml/v1/request.api";
+                //}
                 string expirydate;
                 expirydate = card.CCExpYear + "-" + card.CCExpMonth;
 
@@ -55,7 +55,7 @@ namespace InfraManagement.Services
                                             <customerType>individual</customerType>
                                           <payment>
                                           <creditCard>
-                                          <cardNumber>" + card. + @"</cardNumber>
+                                          <cardNumber>" + card.CCnumber+ @"</cardNumber>
                                           <expirationDate>" + expirydate + @"</expirationDate>
                                           <cardCode>" + card.CCCVS + @"</cardCode>
                                           </creditCard>
