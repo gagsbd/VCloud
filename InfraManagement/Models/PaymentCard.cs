@@ -20,6 +20,8 @@ namespace InfraManagement.Models
         public string FirstName { get; set; }
         [DisplayName("Last Name:")]
         public string LastName { get; set; }
+        [DisplayName("Email:")]
         public string EmailAddress { get; internal set; }
+        public Address BillingAddress { get; set; }
     }
 }

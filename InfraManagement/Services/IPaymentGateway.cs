@@ -17,6 +17,6 @@ namespace InfraManagement.Services
         public bool IsAuthorized { get; set; }
         public string ProfileId { get; set; }
         public string Error { get; set; }
-        
+        public bool IsError { get; internal set; }
     }
 }

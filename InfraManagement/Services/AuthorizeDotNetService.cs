@@ -106,7 +106,8 @@ namespace InfraManagement.Services
             }
             catch (Exception ex)
             {
-
+                result.IsError = true;
+                result.Error = ex.Message;
                 //TODO: Log error
             }
 

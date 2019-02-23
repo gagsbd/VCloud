@@ -9,23 +9,11 @@ namespace InfraManagement.Models
     public class Org
     {
         public string Url { get; set; }
-        [DisplayName("Credit Card Number:")]
-        public string CCnumber{ get; set; }
-        [DisplayName("Card Expiry Month:")]
-        public string CCExpMonth{ get; set; }
-        [DisplayName("Card Expiry Year:")]
-        public int CCExpYear{ get; set; }
-        [DisplayName("CCV:")]
-        public string CCCVS{ get; set; }
-        [DisplayName("First Name:")]
-        public string FirstNam{ get; set; }
-        [DisplayName("Last Name:")]
-        public string LastName{ get; set; }
-        public string Zip{ get; set; }
-        public string Address1{ get; set; }
-        public string Address2{ get; set; }
-        public string State{ get; set; }
-        public string Country{ get; set; }
+
+        public PaymentCard Card { get; set; }
+
+        public Address Address { get; set; }
+
         public string VCloudShortName{ get; set; }
         public string VCloudLongName{ get; set; }
         public bool Production{ get; set; }
