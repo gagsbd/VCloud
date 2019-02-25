@@ -12,10 +12,12 @@ namespace InfraManagement.Controllers
     {
 
         public IPaymentGateway PaymentGateway { get; set; }
+        public ICloudService CloudService { get; set; }
 
-        public HomeController(IPaymentGateway paymentGateway) // The constructor parameter is injected by the unity container. Check UnityConfig.cs
+        public HomeController(IPaymentGateway paymentGateway,ICloudService cloudService) // The constructor parameter is injected by the unity container. Check UnityConfig.cs
         {
             this.PaymentGateway = paymentGateway;
+            this.CloudService = cloudService;
         }
 
         [HttpGet]
@@ -34,7 +36,7 @@ namespace InfraManagement.Controllers
                     var authResult = PaymentGateway?.Authorize(card);
                     if (authResult.IsAuthorized)
                     {
-                        return View("CreateOrgView", new Org());
+                        return View("CreateOrg", new OrgInfo());
                     }
                     else if (authResult.IsError)
                     {
@@ -53,6 +55,31 @@ namespace InfraManagement.Controllers
             }
 
          }
+
+        [HttpPost]
+        public ActionResult CreateOrg(OrgInfo org)
+        {
+            try
+            {
+                if (!this.ModelState.IsValid)
+                {
+                    return View("CreateOrg", org);
+                }
+                else
+                {
+                    var orgHref = this.CloudService.CreateOrg(org);
+
+                    //Create org and tasks in database
+
+                    return this.RedirectToAction("tasks");
+                }
+            }
+            catch (Exception)
+            {
+
+                return View("Error");
+            }
+        }
 
         public ActionResult About()
         {
