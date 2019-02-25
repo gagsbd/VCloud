@@ -7,6 +7,7 @@ using System.Web;
 
 namespace InfraManagement.Database.Entity
 {
+    [Table("Task")]
     public class TaskEntity
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]

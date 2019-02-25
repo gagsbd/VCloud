@@ -7,6 +7,7 @@ using System.Web;
 
 namespace InfraManagement.Database.Entity
 {
+    [Table("Vdc")]
     public class VdcEntity
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]

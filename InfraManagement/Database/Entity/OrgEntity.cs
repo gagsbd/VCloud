@@ -8,6 +8,7 @@ using System.Web;
 
 namespace InfraManagement.Database.Entity
 {
+    [Table("Org")]
     public class OrgEntity
     {
         [Key,DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -16,7 +17,7 @@ namespace InfraManagement.Database.Entity
        
         public AddressEntity Address { get; set; }
         public string CustomerPaymentProfileId { get; set; }
-        public string CustomerProfileID { get; set; }
+        public string CustomerProfileIDd { get; set; }
 
         public string AdminOps { get; set; }
         [DisplayName("Company Short Name:")]
