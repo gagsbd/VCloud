@@ -64,7 +64,7 @@ namespace InfraManagement.Services
             }
         }
 
-        public string CreateOrg(Org newOrg)
+        public string CreateOrg(OrgInfo newOrg)
         {
             string result = "";
             try

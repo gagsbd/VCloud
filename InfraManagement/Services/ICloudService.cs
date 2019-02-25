@@ -10,7 +10,7 @@ namespace InfraManagement.Services
     public interface ICloudService
     {
         string Authentiate();
-        string CreateOrg(Org newOrg);
+        string CreateOrg(OrgInfo newOrg);
         string CreateAdminUser(string orgHref, string emailAddress);
         bool IsOrgNameAvailable(string orgName);
         string CreatedVDC(string orgHref);
