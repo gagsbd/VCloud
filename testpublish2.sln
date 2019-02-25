@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfraManagement", "InfraManagement\InfraManagement.csproj", "{B81BA0A4-698B-4969-8261-0C60F89D4857}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfraManagement.Tests", "InfraManagement.Tests\InfraManagement.Tests.csproj", "{C9F0D33F-87E4-4E92-838F-5F8CFADBD1D8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B81BA0A4-698B-4969-8261-0C60F89D4857}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B81BA0A4-698B-4969-8261-0C60F89D4857}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B81BA0A4-698B-4969-8261-0C60F89D4857}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B81BA0A4-698B-4969-8261-0C60F89D4857}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9F0D33F-87E4-4E92-838F-5F8CFADBD1D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9F0D33F-87E4-4E92-838F-5F8CFADBD1D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9F0D33F-87E4-4E92-838F-5F8CFADBD1D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9F0D33F-87E4-4E92-838F-5F8CFADBD1D8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {286C09BF-0B8D-4B4D-B850-22ACAB09F73A}
+	EndGlobalSection
+EndGlobal
