@@ -1,3 +1,5 @@
+using InfraManagement.Database.Entity;
+using InfraManagement.Models;
 using InfraManagement.Services;
 using System;
 using System.Configuration;
@@ -48,6 +50,14 @@ namespace InfraManagement
                 ConfigurationManager.AppSettings.Get("PaymentGateway.Password"),
                 ConfigurationManager.AppSettings.Get("PaymentGateway.EndPoint")));
 
+            container.RegisterType<ICloudService, VCloudService>(new Unity.Injection.InjectionConstructor(ConfigurationManager.AppSettings.Get("VCloud.EndPoint"),
+                ConfigurationManager.AppSettings.Get("VCloud.ApiVersion"),
+                ConfigurationManager.AppSettings.Get("VCloud.VdcTemplateId"),
+                ConfigurationManager.AppSettings.Get("VCloud.Login"),
+                ConfigurationManager.AppSettings.Get("VCloud.Password")
+                ));
+
+           
         }
     }
 }

@@ -13,10 +13,13 @@ namespace InfraManagement.Database.Entity
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
        
-        public int OrdId { get;  set; }
+        public int OrgId { get;  set; }
         public string Name { get; set; }
         public string StatusUrl { get; set; }
         public string Status { get; set; }
         public string Notes { get; set; }
+        public int TaskType { get; set; }
+        public bool IsLRP { get; set; }
+        
     }
 }

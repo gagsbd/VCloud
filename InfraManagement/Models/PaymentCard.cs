@@ -10,17 +10,18 @@ namespace InfraManagement.Models
     public class PaymentCard
     {
         [DisplayName("Card Number:")]
-        [Required(ErrorMessage ="Card number is required."),CreditCard(ErrorMessage = "Card number is not valid.")]
+        [Required(ErrorMessage ="Card number is required.")]
+        //[CreditCard(ErrorMessage = "Card number is not valid.")]
         public string CCnumber { get; set; }
 
         [DisplayName("Card Expiry Month:")]
         [Required(ErrorMessage = "Card Expiry month is required.")]
-        [ MaxLength(2,ErrorMessage ="Enter 2 digit month")]
-        public string CCExpMonth { get; set; }
+        [Range(1,12, ErrorMessage = "Enter digit month")]
+        public int CCExpMonth { get; set; }
 
         [DisplayName("Card Expiry Year:")]
         [Required(ErrorMessage = "Card Expiry year is required.")]
-        [MaxLength(4, ErrorMessage = "Enter 4 digit year")]
+        //[MaxLength(4, ErrorMessage = "Enter 4 digit year")]
         public int CCExpYear { get; set; }
 
         [DisplayName("CCV:")]
@@ -40,7 +41,7 @@ namespace InfraManagement.Models
         [DisplayName("Email:")]
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Email is not valid.")]
-        public string EmailAddress { get; internal set; }
+        public string EmailAddress { get;  set; }
 
         public Address BillingAddress { get; set; }
     }

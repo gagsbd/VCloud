@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
 using InfraManagement.Models;
@@ -18,15 +19,17 @@ namespace InfraManagement.Services
         private string UserName { get; set; }
         private string Password { get; set; }
         private string Version { get; set; }
+        private string  VdcTemplateId { get; set; }
 
         private string _currentToken = "";
 
-        public VCloudService(string endPoint, string apiVersion, string userName, string password)
+        public VCloudService(string endPoint, string apiVersion,string vdcTemplateId, string userName, string password)
         {
             this.EndPoint = endPoint;
             this.Version = apiVersion;
             this.UserName = userName;
             this.Password = password;
+            this.VdcTemplateId = vdcTemplateId;
         }
 
         public string Authentiate()
@@ -92,10 +95,20 @@ namespace InfraManagement.Services
                                    </vcloud:Settings>
                         </vcloud:AdminOrg>", newOrg.CompanyShortName, newOrg.CompanyFullName);
 
-                InvokeApi(EndPoint + "/api/admin/orgs", xmldata, HttpMethod.Post, 
-                    new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>("Content-type", "application/vnd.vmware.admin.organization+xml; charset=ISO-8859-1" )});
-                              
-                result = GetOrgHref(newOrg.CompanyShortName);
+               var xmlDoc= InvokeApi(EndPoint + "/api/admin/orgs", xmldata, HttpMethod.Post, 
+                     "application/vnd.vmware.admin.organization+xml" );
+
+                var links = xmlDoc.GetElementsByTagName("Link");
+
+                foreach (XmlNode link in links)
+                {
+                    if (link.Attributes["type"]?.Value == "application/vnd.vmware.vcloud.org+xml")
+                    {
+                        result = link.Attributes["href"].Value;
+                        break;
+                    }
+                }
+                //result = GetOrgHref(newOrg.CompanyShortName);
                 EnableOrg(result);
 
             }
@@ -118,26 +131,24 @@ namespace InfraManagement.Services
             var adminRole = GetAdminRoles(orgHref);
 
             string xmldata;
-            xmldata = String.Format( @"<?xml version='1.0' encoding='UTF-8'?><vcloud:User
-                                                            xmlns:vcloud='http://www.vmware.com/vcloud/v1.5'
-                                                            name='Admin'
-                                                            operationKey='operationKey'>
-                  <vcloud:IsEnabled>true</vcloud:IsEnabled>
-                  <vcloud:IsLocked>false</vcloud:IsLocked>
-                  <vcloud:IsExternal>false</vcloud:IsExternal>
-                  <vcloud:ProviderType>INTEGRATED</vcloud:ProviderType>
-                  <vcloud:StoredVmQuota>400</vcloud:StoredVmQuota>
-                  <vcloud:DeployedVmQuota>200</vcloud:DeployedVmQuota>
-                  <vcloud:Role
-                      href='{0}'
-                      name='Organization Administrator'
-                      type=""application/vnd.vmware.admin.role+xml""/>
-                  <vcloud:Password>{1}</vcloud:Password>
-                  </vcloud:User>",adminRole,this.Password);
+            xmldata = String.Format( @"<?xml version='1.0' encoding='UTF-8'?>
+                                      <vcloud:User  xmlns:vcloud='http://www.vmware.com/vcloud/v1.5'  name='Admin' >
+                                      <vcloud:IsEnabled>true</vcloud:IsEnabled>
+                                      <vcloud:IsLocked>false</vcloud:IsLocked>
+                                      <vcloud:IsExternal>false</vcloud:IsExternal>
+                                      <vcloud:ProviderType>INTEGRATED</vcloud:ProviderType>
+                                      <vcloud:StoredVmQuota>400</vcloud:StoredVmQuota>
+                                      <vcloud:DeployedVmQuota>200</vcloud:DeployedVmQuota>
+                                      <vcloud:Role
+                                          href='{0}'
+                                          name='Organization Administrator'
+                                          type='application/vnd.vmware.admin.role+xml'/>
+                                      <vcloud:Password>{1}</vcloud:Password>
+                                      </vcloud:User>",adminRole,this.Password);
 
             //This creates a admin user
-            var xmlDoc = InvokeApi(orgHref.Replace("api/", "api/admin/") + "/users", xmldata, HttpMethod.Post, null);
-                       
+            var xmlDoc = InvokeApi(EndPoint + "/api/admin/org/" + GetOrgId(orgHref) + "/users", xmldata, HttpMethod.Post, "application/vnd.vmware.admin.user+xml");//application/vnd.vmware.admin.user+xml
+
             XmlNodeList xmlnode;
             
             xmlnode = xmlDoc.GetElementsByTagName("User");
@@ -154,23 +165,34 @@ namespace InfraManagement.Services
                                         name = 'Admin' operationKey = 'operationKey' >
                                          <vcloud:EmailAddress >{0}</ vcloud:EmailAddress >
                                          <vcloud:Role href ='{1}' name='Organization Administrator' type='application/vnd.vmware.admin.role + xml' />
-                                      </ vcloud:User > ", emailAddress, adminRole);
+                                      </vcloud:User> ", emailAddress, adminRole);
             InvokeApi(result, xmldata, HttpMethod.Put, null);
             return result;
         }
 
         public bool IsOrgNameAvailable(string orgName)
         {
-            bool result = false;
+            bool result = true;
             try
             {
                 HttpWebRequest orgRequest = (HttpWebRequest)HttpWebRequest.Create(EndPoint + "/api/org");
 
                 var xmlDoc = InvokeApi(EndPoint + "/api/org", "", HttpMethod.Get, null);
 
-                var xmlnode = xmlDoc.SelectSingleNode("//Org[@name='" + orgName + "']");
-                result = (xmlnode.Attributes["name"].Value == orgName);
+                var xmlnode = xmlDoc.GetElementsByTagName("Org");
+                if (xmlnode != null)
+                {
+                    foreach (XmlElement item in xmlnode)
+                    {
+                        if (item.Attributes["name"]?.Value == orgName)
+                        {
+                            result = false;
+                            break;
+                        }
+                    }
+                }
 
+               
                 return result;
             }
             catch (Exception ex)
@@ -179,22 +201,23 @@ namespace InfraManagement.Services
             }
         }
 
-        public string CreatedVDC(string orgHref)
+        public string CreateVDC(string orgHref)
         {
             string result = "";
 
             try
             {
 
-                var xmldata = @"<InstantiateVdcTemplateParams xmlns='http://www.vmware.com/vcloud/v1.5' name='Dallas'>
-                              <Source href='https://vcp1.liveitcloud.com/api/vdcTemplate/90354940-511a-428a-b442-69bc8a8e179e' name='Dallas-Primary' type='application/vnd.vmware.admin.vdcTemplate+xml'/>
+                var xmldata = String.Format( @"<InstantiateVdcTemplateParams xmlns='http://www.vmware.com/vcloud/v1.5' name='Dallas'>
+                              <Source href='{0}/api/vdcTemplate/{1}' name='Dallas-Primary' type='application/vnd.vmware.admin.vdcTemplate+xml'/>
                               <Description>Dallas</Description>
-                            </InstantiateVdcTemplateParams>";
+                            </InstantiateVdcTemplateParams>",EndPoint,VdcTemplateId);
 
-                var xmlDoc = InvokeApi(orgHref + "/action/instantiate",xmldata,HttpMethod.Post,null);
+                var xmlDoc =  InvokeApi(EndPoint + "/api/org/" + GetOrgId(orgHref) + "/action/instantiate",xmldata,HttpMethod.Post, "application/vnd.vmware.vcloud.instantiateVdcTemplateParams+xml");
 
                 result = xmlDoc.SelectSingleNode("/Task")?.Attributes["href"]?.Value;
 
+                return result;
             }
             catch (Exception ex)
             {
@@ -234,9 +257,9 @@ namespace InfraManagement.Services
                                     <vcloud:Description>Catalog</vcloud:Description>
                                 </vcloud:AdminCatalog>";
 
-                var xmlDoc = InvokeApi(orgHref + "/admin/catalogs", xmldata, HttpMethod.Post, new List<KeyValuePair<string, string>> {
-                                                                                                new KeyValuePair<string, string>("Content-type","application/vnd.vmware.admin.catalog+xml; charset=ISO-8859-1")
-                                                                                                });
+                var xmlDoc = InvokeApi(EndPoint + "/api/admin/org/" + GetOrgId(orgHref) + "/catalogs", xmldata, HttpMethod.Post,
+                    "application/vnd.vmware.admin.catalog+xml");
+                                                                                                
 
             }
             catch (Exception)
@@ -248,11 +271,13 @@ namespace InfraManagement.Services
             return result;
         }
 
-        public string UpdateEdgeGateWayToAdvanced(string edgeGatewayEndPoint)
+        public async Task<string> UpdateEdgeGateWayToAdvanced(string orgHref)
         {
             string result = "";
             try
             {
+                string orgVDCEndPoint = GetVDC(orgHref);
+                string edgeGatewayEndPoint = GetEdgeGateway(orgVDCEndPoint);
                 var xmlDoc=InvokeApi(edgeGatewayEndPoint + "/action/convertToAdvancedGateway", "", HttpMethod.Post);
                 result = xmlDoc.SelectSingleNode("//Task")?.Attributes["href"]?.Value;
             }
@@ -262,7 +287,7 @@ namespace InfraManagement.Services
     
             }
 
-            return result;
+            return await Task.FromResult(result);
         }
          
         public string GetTaskStatus(string taskEndPoint)
@@ -304,12 +329,21 @@ namespace InfraManagement.Services
             string result = "";
             //HttpWebRequest orgRequest = (HttpWebRequest)HttpWebRequest.Create(objorg.href.Replace("api/", "api/admin/"));
 
-            var xmlDoc = InvokeApi(orgUrl + "/admin/", "", HttpMethod.Get, null);
-            int i;
+            var xmlDoc = InvokeApi(EndPoint + "/api/admin/org/" + GetOrgId(orgUrl) + "/", "", HttpMethod.Get, null);
             
-            var xmlnode = xmlDoc.SelectSingleNode("//RoleReference[@name='Organization Administrator']");
-            result = xmlnode.Attributes["href"].Value;
+            
+            var xmlnode = xmlDoc.GetElementsByTagName("RoleReference");
 
+            foreach (XmlNode item in xmlnode)
+            {
+                if (item.Attributes["name"].Value == "Organization Administrator")
+                {
+                    result = item.Attributes["href"].Value;
+                    break;
+                }
+            }
+
+            
             return result;
 
         }
@@ -320,12 +354,20 @@ namespace InfraManagement.Services
             var xmlDoc = InvokeApi(EndPoint + "/api/org", "", HttpMethod.Get, null);
 
             XmlNodeList xmlnode;
-                     
+            
             xmlnode = xmlDoc.GetElementsByTagName("Org");
-            var node = xmlDoc.SelectSingleNode("//Org[@name='" + orgName + "']");
-
-            result = node.Attributes["href"].Value;
-
+            if (xmlnode != null)
+            {
+                foreach (XmlElement item in xmlnode)
+                {
+                    if (item.Attributes["name"]?.Value == orgName)
+                    {
+                        result = item.Attributes["href"].Value;
+                        break;
+                    }
+                }
+            }
+           
            return result;
 
         }
@@ -333,11 +375,11 @@ namespace InfraManagement.Services
         private void EnableOrg(string orgHref)
         {
             
-            InvokeApi(orgHref.Replace("api/", "api/admin/") + "/action/enable", "", HttpMethod.Post, null);
+            InvokeApi(  EndPoint + "/api/admin/org/" + GetOrgId(orgHref) + "/action/enable", "", HttpMethod.Post, null);
                        
         }
 
-        private XmlDocument InvokeApi(string url, string xmlWorkload,HttpMethod method, List<KeyValuePair<string,string>> requestHeaders=null)
+        private XmlDocument InvokeApi(string url, string xmlWorkload,HttpMethod method, string contentType=null)
         {
             var result = new XmlDocument();
             // POST /rest/issue/{issue}/timetracking/workitem
@@ -347,21 +389,30 @@ namespace InfraManagement.Services
                 var request = new HttpRequestMessage()
                 {
                     RequestUri = new Uri(url),
-                    Method = method,
+                    Method = method
+                    
                 };
 
+               
                 request.Headers.Add("x-vcloud-authorization", Authentiate());
                 request.Headers.Add("Accept", Version);
-                if (requestHeaders != null)
-                {
-                    foreach (var header in requestHeaders)
-                    {
-                        request.Headers.Add(header.Key, header.Value);
-                    }
 
+                //if (requestHeaders != null)
+                //{
+                //    foreach (var header in requestHeaders)
+                //    {
+                //        request.Headers.Add(header.Key, header.Value);
+                //    }
+                //}
+                if (method != HttpMethod.Get)
+                {
+                    request.Content = new StringContent(xmlWorkload,Encoding.UTF8);// "application/vnd.vmware.admin.organization+xml; charset=ISO-8859-1");
+                    if (!String.IsNullOrEmpty(contentType))
+                    {
+                        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+                    }
                 }
 
-                request.Content = new StringContent(xmlWorkload, Encoding.UTF8, "application/xml");
                 var response = httpClient.SendAsync(request).Result;
                 if (!response.IsSuccessStatusCode)
                 {
@@ -369,11 +420,22 @@ namespace InfraManagement.Services
                 }
                 else
                 {
-                    result.LoadXml(response.Content.ReadAsStringAsync().Result);
+                    var responseTxt = response.Content.ReadAsStringAsync().Result;
+                    if (!String.IsNullOrEmpty(responseTxt))
+                    {
+                        result.LoadXml(response.Content.ReadAsStringAsync().Result);
+                    }
                 }
             }
             return result;
 
+        }
+
+        private string GetOrgId(string orgHref)
+        {
+           int lastIndex = orgHref.LastIndexOf('/');
+            var resutl = orgHref.Substring(lastIndex + 1);
+            return resutl;
         }
     }
 }

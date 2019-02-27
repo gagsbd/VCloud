@@ -1,0 +1,65 @@
+﻿
+
+@{
+    ViewBag.Title = "TasksStatus";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>TasksStatus</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+@*<table class="table" id="StatusTable">
+    <tr>
+        <th>
+            
+        </th>
+        <th>
+            Task name
+        </th>
+        <th>
+            Task Status
+        </th>
+        <th></th>
+    </tr>
+
+
+</table>*@
+<div id="status">
+
+</div>
+
+<script type="text/javascript">
+    
+    $(document).ready(
+        function()
+        {
+            alert("ready");
+            //$.ajax(
+            //    {
+            //        url: "Tasks?orgId=9"
+            //    }
+            //).done(
+            //    function (result) {
+            //        alert(result)
+            //        $("#status").html(result);
+            //    }
+            //);
+           
+            var timerId = setInterval(function () {
+                $.ajax(
+                    {
+                        url: "Tasks?orgId=9"
+                    }
+                ).done(
+                    function (result) {
+                        alert(result)
+                        $("#status").html(result);
+                    }
+                );
+
+            }, 2000);
+        }
+    );
+</script>

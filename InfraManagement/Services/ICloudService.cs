@@ -13,10 +13,10 @@ namespace InfraManagement.Services
         string CreateOrg(OrgInfo newOrg);
         string CreateAdminUser(string orgHref, string emailAddress);
         bool IsOrgNameAvailable(string orgName);
-        string CreatedVDC(string orgHref);
+        string CreateVDC(string orgHref);
         string GetVDC(string orgHref);
         string CreateCatalog(string orgHref);
-        string UpdateEdgeGateWayToAdvanced(string edgeGatewayEndPoint);
+        Task<string> UpdateEdgeGateWayToAdvanced(string orgHref);
         string GetTaskStatus(string taskEndPoint);
 
     }

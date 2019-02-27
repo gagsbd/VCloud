@@ -17,9 +17,7 @@ namespace InfraManagement.Database.Entity
        
         public AddressEntity Address { get; set; }
         public string CustomerPaymentProfileId { get; set; }
-        public string CustomerProfileIDd { get; set; }
-
-        public string AdminOps { get; set; }
+        public string CustomerProfileId { get; set; }
         [DisplayName("Company Short Name:")]
         public string CompanyShortName { get; set; }
         public string CompanyFullName { get; set; }
