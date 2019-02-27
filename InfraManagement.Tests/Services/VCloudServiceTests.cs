@@ -15,7 +15,8 @@ namespace InfraManagement.Tests.Services
             var password = System.Configuration.ConfigurationManager.AppSettings["VCloud.Password"];
             var endPoint = System.Configuration.ConfigurationManager.AppSettings["VCloud.EndPoint"];
             var version = System.Configuration.ConfigurationManager.AppSettings["VCloud.ApiVersion"];
-            ICloudService testService = new VCloudService(endPoint,version,login,password);
+            var vdcTemplate = System.Configuration.ConfigurationManager.AppSettings["VCloud.VdcTemplateId"];
+            ICloudService testService = new VCloudService(endPoint,version, vdcTemplate,login, password);
             testService.Authentiate();
 
         }
