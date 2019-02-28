@@ -1,3 +1,4 @@
+using InfraManagement.Database;
 using InfraManagement.Database.Entity;
 using InfraManagement.Models;
 using InfraManagement.Services;
@@ -57,7 +58,9 @@ namespace InfraManagement
                 ConfigurationManager.AppSettings.Get("VCloud.Password")
                 ));
 
-           
+            container.RegisterType<IPaymentGateway, MockService>();
+            container.RegisterType<ICloudService, MockService>();
+            container.RegisterType<ITenantDatabase, MockDb>();
         }
     }
 }

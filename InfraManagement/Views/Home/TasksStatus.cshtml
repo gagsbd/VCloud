@@ -5,61 +5,54 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>TasksStatus</h2>
+<h2>Tasks Status</h2>
 
-<p>
-    @Html.ActionLink("Create New", "Create")
+<p  class="alert-warning">
+  
+        Please be patient  it may take few minutes to complete all the tasks.
+        We recomend not to close the browser window untill all the tasks are completed.
+   
 </p>
-@*<table class="table" id="StatusTable">
-    <tr>
-        <th>
-            
-        </th>
-        <th>
-            Task name
-        </th>
-        <th>
-            Task Status
-        </th>
-        <th></th>
-    </tr>
-
-
-</table>*@
+<div id="countDown" class="text-primary"></div>
 <div id="status">
 
 </div>
 
 <script type="text/javascript">
-    
+    var remainignSeconds = 120;
     $(document).ready(
         function()
         {
-            alert("ready");
-            //$.ajax(
-            //    {
-            //        url: "Tasks?orgId=9"
-            //    }
-            //).done(
-            //    function (result) {
-            //        alert(result)
-            //        $("#status").html(result);
-            //    }
-            //);
-           
-            var timerId = setInterval(function () {
-                $.ajax(
-                    {
-                        url: "Tasks?orgId=9"
-                    }
-                ).done(
-                    function (result) {
-                        alert(result)
-                        $("#status").html(result);
-                    }
-                );
-
-            }, 2000);
+            updateStatus()
+            remainignSeconds = 120;
+            setCountdown();       
+            //var timerId = setInterval(updateStatus(), 1000);
         }
     );
+
+    function updateStatus() {
+        $.ajax(
+            {
+                url: "Tasks?orgId=9"
+            }
+        ).done(
+            
+            function (result) {
+               
+                remainignSeconds = 120;
+                $("#status").html(result);
+            }
+        );
+    }
+
+    function setCountdown() {
+        setInterval(function () {
+            $("#countDown").text("Status will refresh in " + remainignSeconds + " secs.");
+            remainignSeconds--;
+            if (remainignSeconds == 0) {
+                updateStatus();
+                remainignSeconds = 120;
+            }
+        }, 1000)
+    }
 </script>

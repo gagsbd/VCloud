@@ -22,5 +22,6 @@ namespace InfraManagement.Database.Entity
         public string CompanyShortName { get; set; }
         public string CompanyFullName { get; set; }
         public string EmailAddress { get; set; }
+      
     }
 }

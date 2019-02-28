@@ -22,3 +22,10 @@ select,
 textarea {
     max-width: 280px;
 }
+
+.table {
+    display: table;
+    border-collapse: separate;
+    border-spacing: 2px;
+    border-color: grey;
+}

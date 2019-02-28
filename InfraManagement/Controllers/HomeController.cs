@@ -19,7 +19,7 @@ namespace InfraManagement.Controllers
 
         public IPaymentGateway PaymentGateway { get; set; }
         public ICloudService CloudService { get; set; }
-        public TenantDatabase DB { get; set; }
+        public ITenantDatabase DB { get; set; }
 
         public enum TaskType
         {
@@ -29,7 +29,7 @@ namespace InfraManagement.Controllers
             UpgradeGateWay = 400,
             SaveInformation = 500
         }
-        public HomeController(IPaymentGateway paymentGateway, ICloudService cloudService, TenantDatabase db) // The constructor parameter is injected by the unity container. Check UnityConfig.cs
+        public HomeController(IPaymentGateway paymentGateway, ICloudService cloudService, ITenantDatabase db) // The constructor parameter is injected by the unity container. Check UnityConfig.cs
         {
             this.PaymentGateway = paymentGateway;
             this.CloudService = cloudService;
@@ -47,16 +47,28 @@ namespace InfraManagement.Controllers
         {
             try
             {
+                if ((card.CCExpYear == DateTime.Now.Year && card.CCExpMonth < DateTime.Now.Month) || card.CCExpYear < DateTime.Now.Year)
+                {
+                    this.ModelState.AddModelError(nameof(card.CCExpMonth), "Expiry month is invalid.");
+                    this.ModelState.AddModelError(nameof(card.CCExpYear), "Expiry year is invalid.");
+                }
                 if (this.ModelState.IsValid)
                 {
-                    var authResult = new AuthResult() { IsAuthorized = true, ProfileId = "27383" };// PaymentGateway?.Authorize(card);
+                    var authResult = PaymentGateway?.Authorize(card);
                     if (authResult.IsAuthorized)
                     {
-                        return View("CreateOrg", new OrgInfo() { CustomerPaymentProfileId = authResult.ProfileId, EmailAddress=card.EmailAddress, Address = new Address() });
+                        return View("CreateOrg", new OrgInfo()
+                        {
+                            CustomerPaymentProfileId = authResult.PaymentProfileId,
+                            CustomerProfileId = authResult.ProfileId,
+                            EmailAddress = card.EmailAddress,
+                            Address = new Address()
+                        });
                     }
                     else if (authResult.IsError)
                     {
-                        throw new Exception(authResult.Error);
+                        ModelState.AddModelError(nameof(card.CCnumber), authResult.Error);
+                       
                     }
 
                 }
@@ -72,6 +84,11 @@ namespace InfraManagement.Controllers
 
         }
 
+        [HttpGet]
+        public ActionResult ShowOrg()
+        {
+            return View("CreateOrg", new OrgInfo());
+        }
         [HttpPost]
         public ActionResult CreateOrg(OrgInfo org)
         {
@@ -115,10 +132,10 @@ namespace InfraManagement.Controllers
         }
 
         [HttpGet]
-        public  ActionResult TaskStatus(int orgId)
+        public async Task<ActionResult> TaskStatus(int orgId)
         {
-           // await StartProvisioningVdc(orgId);
-            return  View("TasksStatus");
+            await StartProvisioningVdc(orgId);
+            return View("TasksStatus");
         }
 
         [HttpGet]
@@ -128,18 +145,34 @@ namespace InfraManagement.Controllers
             {
                 await StartProvisioningVdc(orgId);
                 HtmlString result;
-                StringBuilder html = new StringBuilder("<table class=table'><tr><th>Task Name</th><th>Task Status</th></tr>");
+                StringBuilder html = new StringBuilder("<table class='table'><tr><th>Task Name</th><th>Task Status</th><th></th></tr>");
+                string statusIcon = "";
+                var taskList = DB.GetOrgTasks(orgId);
+                foreach (var item in taskList)
+                {
+                    if (item.Status == "Running")
+                    {
+                        statusIcon = "<img style='width:20px;height:20px' src='/images/settings.png'>";
+                    } else if (item.Status == "Completed")
+                    {
+                        statusIcon = "<img style='width:20px;height:20px' src='/images/success.png'>";
+                    }
+                    else if (item.Status == "Error")
+                    {
+                        statusIcon = "<img style='width:20px;height:20px' src='/images/error.png'>";
+                    } else
+                    {
+                        statusIcon = "<img style='width:20px;height:20px' src='/images/error.png'>";
+                    }
 
-                //var taskList = DB.GetOrgTasks(orgId);
-                //foreach (var item in taskList)
-                //{
-                //    html.Append(String.Format(@"<tr><td>{0}</td><td>{1}</td></tr>", item.Name, item.Status));
-                //}
+
+                    html.Append(String.Format(@"<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>", item.Name, item.Status, statusIcon));
+                }
 
                 html.Append("</html>");
                 result = new HtmlString(html.ToString());
                 return result;
-               
+
 
             }
             catch (Exception ex)
@@ -189,7 +222,7 @@ namespace InfraManagement.Controllers
 
             //Start the first task in the list that has not been stated yet
 
-            var taskToStart = pendingTasks.FirstOrDefault<TaskEntity>(t=>t.Status != "Completed");
+            var taskToStart = pendingTasks.FirstOrDefault<TaskEntity>(t => t.Status != "Completed");
 
             if (taskToStart == null)
             {
@@ -205,7 +238,7 @@ namespace InfraManagement.Controllers
             ////update the task status in the db
             //DB.UpdateTaskStatus(orgId, (int)TaskType.CreateAdmin, "Completed");
 
-            
+
 
             ////2. Create VDC asynchronously
             //var createVDC = Task.Run<string>(() => CloudService.CreatedVDC(orgHref));
@@ -245,7 +278,7 @@ namespace InfraManagement.Controllers
         }
 
 
-        private void StartTask(TaskEntity task,int orgId)
+        private void StartTask(TaskEntity task, int orgId)
         {
             if (task == null)
             {
@@ -263,12 +296,12 @@ namespace InfraManagement.Controllers
                 {
                     case TaskType.CreateAdmin:
                         {
-                            
-                           // var adminUserHref = CloudService.CreateAdminUser(org.Url,org.EmailAddress);
-                           // DB.UpdateTaskStatus(orgId, (int)TaskType.CreateAdmin, "Completed");
+
+                            // var adminUserHref = CloudService.CreateAdminUser(org.Url,org.EmailAddress);
+                            // DB.UpdateTaskStatus(orgId, (int)TaskType.CreateAdmin, "Completed");
                             break;
                         }
-                    case TaskType.CreateVDC:  
+                    case TaskType.CreateVDC:
                         {
                             //This is a long running task
                             //Hence start the task only if it is not started.
@@ -280,23 +313,18 @@ namespace InfraManagement.Controllers
                                 task.Status = "Running";
                                 DB.UpdateTask(task);
                             }
-                            else if(task.Status != "Completed")
+                            else if (task.Status != "Completed")
                             {
-                                var remoteStatus = CloudService.GetTaskStatus(task.StatusUrl);
-                                if (remoteStatus == "success")
-                                {
-                                    task.Status = "Completed";
-                                    DB.UpdateTask(task);
-                                }
+                                UpdateStatus(task);
                             }
-                           break; 
+                            break;
                         }
                     case TaskType.CreateCatalog:
                         {
-                            
+
                             var adminUserHref = CloudService.CreateCatalog(org.Url);
                             DB.UpdateTaskStatus(orgId, (int)TaskType.CreateAdmin, "Completed");
-                            
+
                             break;
                         }
                     case TaskType.UpgradeGateWay:
@@ -314,16 +342,11 @@ namespace InfraManagement.Controllers
                             }
                             else if (task.Status != "Completed")
                             {
-                                var remoteStatus = CloudService.GetTaskStatus(task.StatusUrl);
-                                if (remoteStatus == "success")
-                                {
-                                    task.Status = "Completed";
-                                    DB.UpdateTask(task);
-                                }
+                                UpdateStatus(task);
                             }
                             break;
                         }
-                       
+
                     case TaskType.SaveInformation:
                         break;
                     default:
@@ -332,11 +355,27 @@ namespace InfraManagement.Controllers
             }
             catch (Exception ex)
             {
-                WriteError(ex); 
+                WriteError(ex);
                 throw;
             }
         }
 
-
+        private void UpdateStatus(TaskEntity task)
+        {
+            if (String.IsNullOrEmpty(task.StatusUrl))
+            {
+                task.Status = "Unknown";
+            }
+            else
+            {
+                var remoteStatus = CloudService.GetTaskStatus(task.StatusUrl);
+                if (remoteStatus == "success")
+                {
+                    task.Status = "Completed";
+                    DB.UpdateTask(task);
+                }
+            }
+            DB.UpdateTask(task);
+        }
     }
 }

@@ -22,6 +22,7 @@ namespace InfraManagement.Models
         [DisplayName("Card Expiry Year:")]
         [Required(ErrorMessage = "Card Expiry year is required.")]
         //[MaxLength(4, ErrorMessage = "Enter 4 digit year")]
+        [Range(1000, 9999,ErrorMessage = "Enter 4 digit year")]
         public int CCExpYear { get; set; }
 
         [DisplayName("CCV:")]

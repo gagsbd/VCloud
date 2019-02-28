@@ -4,12 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
+using System.Xml.Serialization;
 using InfraManagement.Models;
 using static System.Diagnostics.Trace;
+using static InfraManagement.Services.HttpHelper;
 
 namespace InfraManagement.Services
 {
@@ -42,23 +45,38 @@ namespace InfraManagement.Services
                 }
 
                 string result = "";
-                HttpWebRequest authRequest = (HttpWebRequest)HttpWebRequest.Create(EndPoint + "/api/sessions");
-                authRequest.Method = "POST";
-                authRequest.Accept = Version;
+                //HttpWebRequest authRequest = (HttpWebRequest)HttpWebRequest.Create(EndPoint + "/api/sessions");
+                //authRequest.Method = "POST";
+                //authRequest.Accept = Version;
 
                 string credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(UserName + "@System:" + Password));
-                authRequest.Headers.Add("Authorization:" + "Basic " + credentials);
-                // So we setup the request, now we need to execute the task
+                //authRequest.Headers.Add("Authorization:" + "Basic " + credentials);
+                //// So we setup the request, now we need to execute the task
 
-                HttpWebResponse authresponse = (HttpWebResponse)authRequest.GetResponse();
+                //HttpWebResponse authresponse = (HttpWebResponse)authRequest.GetResponse();
 
-                Stream receivestream = authresponse.GetResponseStream();
+                //Stream receivestream = authresponse.GetResponseStream();
 
-                StreamReader readstream = new StreamReader(receivestream, Encoding.UTF8);
+                //StreamReader readstream = new StreamReader(receivestream, Encoding.UTF8);
 
-                result = authresponse.GetResponseHeader("x-vcloud-authorization");
+                //result = authresponse.GetResponseHeader("x-vcloud-authorization");
                 _currentToken = result;
+
+                InvokeApi(EndPoint + "/api/sessions", "", HttpMethod.Post,r=> {
+                    r.Headers.Clear(); //Make sure tere is nothing in the header
+                    r.Headers.Authorization =  new System.Net.Http.Headers.AuthenticationHeaderValue( "Basic",credentials);
+
+                },
+                headers => {
+                    var authHeader = headers.GetValues("x-vcloud-authorization")?.ToList();
+                    if (authHeader != null && authHeader.Count > 0)
+                    {
+                        result = authHeader[0]; 
+                    }
+                }
+                );
                 return result;
+
             }
             catch (Exception ex)
             {
@@ -95,8 +113,7 @@ namespace InfraManagement.Services
                                    </vcloud:Settings>
                         </vcloud:AdminOrg>", newOrg.CompanyShortName, newOrg.CompanyFullName);
 
-               var xmlDoc= InvokeApi(EndPoint + "/api/admin/orgs", xmldata, HttpMethod.Post, 
-                     "application/vnd.vmware.admin.organization+xml" );
+               var xmlDoc= InvokeApi(EndPoint + "/api/admin/orgs", xmldata, HttpMethod.Post, r => { AddHeaders(r, "application/vnd.vmware.admin.organization+xml"); });
 
                 var links = xmlDoc.GetElementsByTagName("Link");
 
@@ -147,7 +164,7 @@ namespace InfraManagement.Services
                                       </vcloud:User>",adminRole,this.Password);
 
             //This creates a admin user
-            var xmlDoc = InvokeApi(EndPoint + "/api/admin/org/" + GetOrgId(orgHref) + "/users", xmldata, HttpMethod.Post, "application/vnd.vmware.admin.user+xml");//application/vnd.vmware.admin.user+xml
+            var xmlDoc = InvokeApi(EndPoint + "/api/admin/org/" + GetOrgId(orgHref) + "/users", xmldata, HttpMethod.Post, r => { AddHeaders(r, "application/vnd.vmware.admin.user+xml"); });//application/vnd.vmware.admin.user+xml
 
             XmlNodeList xmlnode;
             
@@ -213,7 +230,7 @@ namespace InfraManagement.Services
                               <Description>Dallas</Description>
                             </InstantiateVdcTemplateParams>",EndPoint,VdcTemplateId);
 
-                var xmlDoc =  InvokeApi(EndPoint + "/api/org/" + GetOrgId(orgHref) + "/action/instantiate",xmldata,HttpMethod.Post, "application/vnd.vmware.vcloud.instantiateVdcTemplateParams+xml");
+                var xmlDoc =  InvokeApi(EndPoint + "/api/org/" + GetOrgId(orgHref) + "/action/instantiate",xmldata,HttpMethod.Post, r => { AddHeaders(r, "application/vnd.vmware.vcloud.instantiateVdcTemplateParams+xml"); });
 
                 result = xmlDoc.SelectSingleNode("/Task")?.Attributes["href"]?.Value;
 
@@ -257,8 +274,7 @@ namespace InfraManagement.Services
                                     <vcloud:Description>Catalog</vcloud:Description>
                                 </vcloud:AdminCatalog>";
 
-                var xmlDoc = InvokeApi(EndPoint + "/api/admin/org/" + GetOrgId(orgHref) + "/catalogs", xmldata, HttpMethod.Post,
-                    "application/vnd.vmware.admin.catalog+xml");
+                var xmlDoc = InvokeApi(EndPoint + "/api/admin/org/" + GetOrgId(orgHref) + "/catalogs", xmldata, HttpMethod.Post,r => { AddHeaders(r, "application/vnd.vmware.admin.catalog+xml"); });
                                                                                                 
 
             }
@@ -379,57 +395,7 @@ namespace InfraManagement.Services
                        
         }
 
-        private XmlDocument InvokeApi(string url, string xmlWorkload,HttpMethod method, string contentType=null)
-        {
-            var result = new XmlDocument();
-            // POST /rest/issue/{issue}/timetracking/workitem
-            using (var httpClient = new HttpClient())
-            {
-
-                var request = new HttpRequestMessage()
-                {
-                    RequestUri = new Uri(url),
-                    Method = method
-                    
-                };
-
-               
-                request.Headers.Add("x-vcloud-authorization", Authentiate());
-                request.Headers.Add("Accept", Version);
-
-                //if (requestHeaders != null)
-                //{
-                //    foreach (var header in requestHeaders)
-                //    {
-                //        request.Headers.Add(header.Key, header.Value);
-                //    }
-                //}
-                if (method != HttpMethod.Get)
-                {
-                    request.Content = new StringContent(xmlWorkload,Encoding.UTF8);// "application/vnd.vmware.admin.organization+xml; charset=ISO-8859-1");
-                    if (!String.IsNullOrEmpty(contentType))
-                    {
-                        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
-                    }
-                }
-
-                var response = httpClient.SendAsync(request).Result;
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception(response.ReasonPhrase);
-                }
-                else
-                {
-                    var responseTxt = response.Content.ReadAsStringAsync().Result;
-                    if (!String.IsNullOrEmpty(responseTxt))
-                    {
-                        result.LoadXml(response.Content.ReadAsStringAsync().Result);
-                    }
-                }
-            }
-            return result;
-
-        }
+        
 
         private string GetOrgId(string orgHref)
         {
@@ -437,5 +403,29 @@ namespace InfraManagement.Services
             var resutl = orgHref.Substring(lastIndex + 1);
             return resutl;
         }
+
+        private void AddHeaders(HttpRequestMessage request,string contentType)
+        {
+            request.Headers.Add("x-vcloud-authorization", Authentiate());
+            request.Headers.Add("Accept", Version);
+            if (!String.IsNullOrEmpty(contentType))
+            {
+                request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+            }
+        }
+    }
+
+    //Types for xml parsing
+    public class OrgList
+    {
+        [XmlElement("Org")]
+        [Newtonsoft.Json.JsonProperty("Org") ]
+        public List<Org> Orgs { get; set; }
+    }
+    public class Org
+    {
+        public string href { get; set; }
+        public string name { get; set; }
+        public string type { get; set; }
     }
 }

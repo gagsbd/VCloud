@@ -7,7 +7,7 @@ using System.Web;
 
 namespace InfraManagement.Database
 {
-    public class TenantDatabase : DbContext
+    public class TenantDatabase : DbContext, ITenantDatabase
     {
         public TenantDatabase() : base("tenantdb")
         { }
@@ -64,7 +64,20 @@ namespace InfraManagement.Database
             
             if (task != null)
             {
-                this.Task.Add(task);  
+               var taskToUpdate = this.Task.SingleOrDefault(t => t.Id == task.Id);
+
+                if (taskToUpdate != null)
+                {
+                    taskToUpdate.IsLRP = taskToUpdate.IsLRP;
+                    taskToUpdate.Name = task.Name;
+                    taskToUpdate.Notes = task.Notes;
+                    taskToUpdate.Status = task.Status;
+                    taskToUpdate.StatusUrl = task.StatusUrl;
+                    taskToUpdate.TaskType = task.TaskType;
+                    
+                }
+
+                //this.Task.Add(task);  
                 this.SaveChanges();
             }
             
