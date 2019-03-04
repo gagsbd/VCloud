@@ -29,7 +29,7 @@ namespace InfraManagement.Database
         {
            
             this.Org.Add(org);
-             this.SaveChanges();
+            this.SaveChanges();
             return org.Id;
         }
 
@@ -86,6 +86,7 @@ namespace InfraManagement.Database
 
         public List<TaskEntity> GetOrgTasks(int orgId)
         {
+          
            var result =  this.Task.Where(t => t.OrgId == orgId)?.ToList();
            return result;
         }
@@ -95,6 +96,18 @@ namespace InfraManagement.Database
         public OrgEntity GetOrgById(int orgId)
         {
             return this.Org.FirstOrDefault<OrgEntity>(o=>o.Id == orgId);
+        }
+
+        public OrgEntity GetOrgByTenantId(string tenantId)
+        {
+            return this.Org.FirstOrDefault<OrgEntity>(o => o.TenantId == tenantId);
+        }
+
+        public void UpdateOrg(OrgEntity org)
+        {
+            this.Org.Attach(org);
+            this.Entry<OrgEntity>(org).Property(nameof(org.Cloud_TenantId)).IsModified = true;
+            this.SaveChanges();
         }
     }
 }

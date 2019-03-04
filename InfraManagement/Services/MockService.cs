@@ -19,7 +19,7 @@ namespace InfraManagement.Services
             return new AuthResult { IsAuthorized = true, PaymentProfileId = "1234", ProfileId = "098" }  ;
         }
 
-        public string CreateAdminUser(string orgHref, string emailAddress)
+        public string CreateAdminUser(string orgHref, string emailAddress,string userName, string password)
         {
             return "done";
         }
@@ -39,6 +39,11 @@ namespace InfraManagement.Services
             return "done";
         }
 
+        public void EnableOrg(string cloudTenantId)
+        {
+            throw new NotImplementedException();
+        }
+
         public string GetTaskStatus(string taskEndPoint)
         {
             return "Completed";
@@ -47,6 +52,11 @@ namespace InfraManagement.Services
         public string GetVDC(string orgHref)
         {
             return "done";
+        }
+
+        public bool IsAdminUserAvaialbe(string username)
+        {
+            throw new NotImplementedException();
         }
 
         public bool IsOrgNameAvailable(string orgName)

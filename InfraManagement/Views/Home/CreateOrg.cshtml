@@ -36,6 +36,7 @@
                     <div class="col-md-10">
                         @Html.EditorFor(model => model.CompanyShortName, new { htmlAttributes = new { @class = "form-control", id = "short_name" } })
                         @Html.ValidationMessageFor(model => model.CompanyShortName, "", new { @class = "text-danger" })
+                        <div id="orgAvailability" ></div>
                     </div>
                 </div>
 
@@ -43,7 +44,31 @@
         </tr>
         <tr>
             <td>
-                      @Html.HiddenFor(model => model.EmailAddress, new { htmlAttributes = new { @class = "form-control" } })
+             
+                <div class="form-group">
+                    @Html.LabelFor(model => model.AdminName, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.AdminName, new { htmlAttributes = new { @class = "form-control", id = "admin_name" } })
+                        Click <a href="#" id="chkUser">here</a> to check the availability.
+                        @Html.ValidationMessageFor(model => model.AdminName, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="form-group">
+                    @Html.LabelFor(model => model.AdminPassword, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.PasswordFor(model => model.AdminPassword, new { htmlAttributes = new { @class = "form-control", id = "password" } })
+                        @Html.ValidationMessageFor(model => model.AdminPassword, "", new { @class = "text-danger" })
+                        <div id="orgAvailability"></div>
+                    </div>
+                </div>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+                @Html.HiddenFor(model => model.EmailAddress, new { htmlAttributes = new { @class = "form-control" } })
 
             </td>
             <td></td>
@@ -120,7 +145,7 @@
     </table>
     <div class="form-group">
         <div class="col-md-offset-2 col-md-10  text-center">
-            <input type="submit" value="Create" class="btn btn-default  btn-primary" />
+            <input type="submit" value="Create" class="btn btn-default  btn-primary" id="submit" />
         </div>
     </div>
 </div>
@@ -133,10 +158,63 @@
 }
 <script type="text/javascript" >
     $(document).ready(function () {
-
+        $("#submit").prop("disabled", true);
         $("#full_name").change(function () {
-            $("#short_name").val($(this).val().replace(' ',''));
+            if (!$("#short_name").val()) {
+                $("#short_name").val($(this).val().replace(' ', ''));
+                chekOrg();
+            }
+        });
+
+        $("#short_name").change(function () {
+            $("#orgAvailability").text("Checkign availability")
+            chekOrg();
+            
+        });
+
+        $("#chkUser").click(function () {
+            
+            var admin_name = $("#admin_name").val();
+            $.ajax(
+                {
+                    url: "IsAdminUserNameAvaialbe?adminName=" + admin_name
+                }
+            ).done(
+
+                function (result) {
+                    if (result) {
+                       alert(admin_name + " is avaialble.")
+                    } else {
+                        alert(admin_name + " is NOT avaialble.")
+                    }
+                }
+            );
         });
     }
     );
+
+    function chekOrg() {
+        var org_name = $("#submit").val();
+        $.ajax(
+            {
+                url: "IsOrgNameAvaialbe?orgName=" + org_name
+            }
+        ).done(
+
+            function (result) {
+                if (result) {
+                    $("#submit").prop("disabled", false);
+                    $("#orgAvailability").text("Org name is Avaialble")
+                    $("#orgAvailability").removeClass("text-danger");
+                    $("#orgAvailability").addClass("text-info");
+                    
+                } else {
+                    $("#submit").prop("disabled", true);
+                    $("#orgAvailability").text("Org name is already taken.")
+                    $("#orgAvailability").addClass("text-danger");
+                    $("#orgAvailability").removeClass("text-Info");
+                }
+            }
+        );
+    }
 </script>

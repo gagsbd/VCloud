@@ -12,5 +12,7 @@ namespace InfraManagement.Database
         List<TaskEntity> GetOrgTasks(int orgId);
         void UpdateTask(TaskEntity task);
         void UpdateTaskStatus(int orgId, int taskType, string newStatus);
+        OrgEntity GetOrgByTenantId(string tenantId);
+        void UpdateOrg(OrgEntity org);
     }
 }

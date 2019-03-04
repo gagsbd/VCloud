@@ -14,12 +14,15 @@ namespace InfraManagement.Database.Entity
         public int Id { get; set; }
        
         public int OrgId { get;  set; }
+        public string TaskCode { get; set; }
         public string Name { get; set; }
         public string StatusUrl { get; set; }
         public string Status { get; set; }
         public string Notes { get; set; }
         public int TaskType { get; set; }
         public bool IsLRP { get; set; }
-        
+
+        public string Predecessor { get; set; }
+
     }
 }

@@ -54,13 +54,17 @@ namespace InfraManagement
             container.RegisterType<ICloudService, VCloudService>(new Unity.Injection.InjectionConstructor(ConfigurationManager.AppSettings.Get("VCloud.EndPoint"),
                 ConfigurationManager.AppSettings.Get("VCloud.ApiVersion"),
                 ConfigurationManager.AppSettings.Get("VCloud.VdcTemplateId"),
+                ConfigurationManager.AppSettings.Get("VCloud.VdcTemplateName"),
                 ConfigurationManager.AppSettings.Get("VCloud.Login"),
                 ConfigurationManager.AppSettings.Get("VCloud.Password")
                 ));
 
-            container.RegisterType<IPaymentGateway, MockService>();
-            container.RegisterType<ICloudService, MockService>();
-            container.RegisterType<ITenantDatabase, MockDb>();
+            container.RegisterType<ITenantDatabase, TenantDatabase>();
+            container.RegisterType<INotificationService, EmailService>();
+
+            //container.RegisterType<IPaymentGateway, MockService>();
+            //container.RegisterType<ICloudService, MockService>();
+            //container.RegisterType<ITenantDatabase, MockDb>();
         }
     }
 }

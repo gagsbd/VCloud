@@ -19,5 +19,12 @@ namespace InfraManagement
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             AutomapperConfig.Config();
         }
+
+        protected void Application_Error()
+        {
+            var ex = Server.GetLastError();
+            //log the error!
+            System.Diagnostics.Trace.Write(ex);
+        }
     }
 }

@@ -21,7 +21,7 @@ namespace InfraManagement.Tests.Database
                     CustomerPaymentProfileId = "234",
                     CustomerProfileId = "543",
                     EmailAddress = "email@address.com",
-                    Url = "https//vdirect.url"
+                   
                 });
 
                 Assert.IsTrue(id > 0);

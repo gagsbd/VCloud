@@ -1,4 +1,4 @@
-﻿
+﻿@model string
 
 @{
     ViewBag.Title = "TasksStatus";
@@ -13,11 +13,14 @@
         We recomend not to close the browser window untill all the tasks are completed.
    
 </p>
-<div id="countDown" class="text-primary"></div>
-<div id="status">
 
-</div>
-
+<div id="countDown" class="text-primary">Retriving tasks...</div>
+<form>
+    @Html.Hidden("tenantId",Model)
+    <div id="status">
+        
+    </div>
+</form>
 <script type="text/javascript">
     var remainignSeconds = 120;
     $(document).ready(
@@ -33,7 +36,8 @@
     function updateStatus() {
         $.ajax(
             {
-                url: "Tasks?orgId=9"
+                url: "Tasks?tenantId=" + $("#tenantId").val(),
+                async:false
             }
         ).done(
             

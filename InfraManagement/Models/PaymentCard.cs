@@ -44,6 +44,8 @@ namespace InfraManagement.Models
         [EmailAddress(ErrorMessage = "Email is not valid.")]
         public string EmailAddress { get;  set; }
 
+        public string CaptchaCode { get; set; }
+
         public Address BillingAddress { get; set; }
     }
 }

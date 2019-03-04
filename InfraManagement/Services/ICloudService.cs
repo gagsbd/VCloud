@@ -11,13 +11,14 @@ namespace InfraManagement.Services
     {
         string Authentiate();
         string CreateOrg(OrgInfo newOrg);
-        string CreateAdminUser(string orgHref, string emailAddress);
+        string CreateAdminUser(string tenantId, string emailAddress,string userName,string password);
         bool IsOrgNameAvailable(string orgName);
-        string CreateVDC(string orgHref);
-        string GetVDC(string orgHref);
-        string CreateCatalog(string orgHref);
-        Task<string> UpdateEdgeGateWayToAdvanced(string orgHref);
+        string CreateVDC(string tenantId);
+        string GetVDC(string tenantId);
+        string CreateCatalog(string tenantId);
+        Task<string> UpdateEdgeGateWayToAdvanced(string tenantId);
         string GetTaskStatus(string taskEndPoint);
-
+        bool IsAdminUserAvaialbe(string adminUsername);
+        void EnableOrg(string cloudTenantId);
     }
 }

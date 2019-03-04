@@ -27,26 +27,17 @@ namespace InfraManagement.Services
                 };
 
 
-
-
-                //if (requestHeaders != null)
-                //{
-                //    foreach (var header in requestHeaders)
-                //    {
-                //        request.Headers.Add(header.Key, header.Value);
-                //    }
-                //}
                 if (method != HttpMethod.Get)
                 {
                     request.Content = new StringContent(xmlWorkload, Encoding.UTF8);// "application/vnd.vmware.admin.organization+xml; charset=ISO-8859-1");
-                    preSend?.Invoke(request);
-
                 }
+
+                preSend?.Invoke(request);
 
                 var response = httpClient.SendAsync(request).Result;
                 if (!response.IsSuccessStatusCode)
                 {
-                    throw new Exception(response.ReasonPhrase);
+                    throw new HttpException(response.ReasonPhrase);
                 }
                 else
                 {

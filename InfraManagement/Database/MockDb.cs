@@ -33,8 +33,13 @@ namespace InfraManagement.Database
                 CustomerProfileId = "1",
                 EmailAddress = "mocked@moked.com",
                 Id = 1,
-                Url = "https://org/1"
+                TenantId = Guid.NewGuid().ToString()
             };
+        }
+
+        public OrgEntity GetOrgByTenantId(string tenantId)
+        {
+            throw new NotImplementedException();
         }
 
         public List<TaskEntity> GetOrgTasks(int orgId)
@@ -47,6 +52,11 @@ namespace InfraManagement.Database
 
             };
             return result;
+        }
+
+        public void UpdateOrg(OrgEntity org)
+        {
+            throw new NotImplementedException();
         }
 
         public void UpdateTask(TaskEntity task)
