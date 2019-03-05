@@ -11,6 +11,8 @@
   
         Please be patient  it may take few minutes to complete all the tasks.
         We recomend not to close the browser window untill all the tasks are completed.
+    <br />
+      
    
 </p>
 
@@ -22,18 +24,19 @@
     </div>
 </form>
 <script type="text/javascript">
-    var remainignSeconds = 120;
+    var remainignSeconds = 30;
     $(document).ready(
         function()
         {
             updateStatus()
-            remainignSeconds = 120;
+            remainignSeconds = 30;
             setCountdown();       
             //var timerId = setInterval(updateStatus(), 1000);
         }
     );
 
     function updateStatus() {
+        $("#status").html("Contacting server..");
         $.ajax(
             {
                 url: "Tasks?tenantId=" + $("#tenantId").val(),
@@ -43,7 +46,7 @@
             
             function (result) {
                
-                remainignSeconds = 120;
+                remainignSeconds = 30;
                 $("#status").html(result);
             }
         );
@@ -51,11 +54,21 @@
 
     function setCountdown() {
         setInterval(function () {
-            $("#countDown").text("Status will refresh in " + remainignSeconds + " secs.");
+            $("#countDown").html("Status will refresh in " + remainignSeconds + " secs.<br/> Click <a href='ResumeTasks?tenantId='" + $("#tenantId").val() + "' >here</a> to refresh.");
             remainignSeconds--;
             if (remainignSeconds == 0) {
                 updateStatus();
-                remainignSeconds = 120;
+                remainignSeconds = 30;
+            }
+
+            if (remainignSeconds % 15 == 0)
+            {
+                $.ajax(
+                    {
+                        url: "ProcessTasks?tenantId=" + $("#tenantId").val(),
+                        async: false
+                    }
+                )
             }
         }, 1000)
     }

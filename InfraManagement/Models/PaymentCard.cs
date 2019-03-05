@@ -16,7 +16,7 @@ namespace InfraManagement.Models
 
         [DisplayName("Card Expiry Month:")]
         [Required(ErrorMessage = "Card Expiry month is required.")]
-        [Range(1,12, ErrorMessage = "Enter digit month")]
+        //[Range(1,12, ErrorMessage = "Enter digit month")]
         public int CCExpMonth { get; set; }
 
         [DisplayName("Card Expiry Year:")]

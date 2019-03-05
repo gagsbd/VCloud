@@ -14,9 +14,16 @@ namespace InfraManagement.Services
 {
     public class AuthorizeDotNetService : IPaymentGateway
     {
-        public string UserName { get; set; }
-        public string Password { get; set; }
-        public string EndPoint { get; set; }
+        private string UserName { get; set; }
+        private string Password { get; set; }
+        private string EndPoint { get; set; }
+
+        /// <summary>
+        /// These construcctor paramters are read from web.config injected in Unitconfig.cs
+        /// </summary>
+        /// <param name="login"></param>
+        /// <param name="transactionKey"></param>
+        /// <param name="endPoint"></param>
         public AuthorizeDotNetService(string login, string transactionKey, string endPoint)
         {
             this.UserName = login;
@@ -96,7 +103,7 @@ namespace InfraManagement.Services
             {
                 result.IsError = true;
                 result.Error = ex.Message;
-                //TODO: Log error
+                
             }
 
             return result;

@@ -21,11 +21,8 @@ namespace InfraManagement.Services
             using (SmtpClient smtp = new SmtpClient())
             {
 
-                //smtp.SendAsync(msg,null);
-                //smtp.Timeout = 60 * 1000;
-                smtp.UseDefaultCredentials = false;
-                smtp.Credentials = new NetworkCredential("gdeepadiah@gmail.com", "gags@12345");
-                smtp.Send(msg);
+                smtp.SendAsync(msg,null);
+    
             }
         }
     }

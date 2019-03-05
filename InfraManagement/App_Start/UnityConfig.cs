@@ -61,6 +61,7 @@ namespace InfraManagement
 
             container.RegisterType<ITenantDatabase, TenantDatabase>();
             container.RegisterType<INotificationService, EmailService>();
+            container.RegisterType<ILogger, Logger>();
 
             //container.RegisterType<IPaymentGateway, MockService>();
             //container.RegisterType<ICloudService, MockService>();

@@ -26,5 +26,6 @@ namespace InfraManagement.Database.Entity
         public string EmailAddress { get; set; }
         public string AdminName { get; set; }
         public string AdminPassword { get; set; }
+        public DateTime UpdateTime { get; set; }
     }
 }

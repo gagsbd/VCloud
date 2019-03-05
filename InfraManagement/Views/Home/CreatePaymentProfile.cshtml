@@ -66,7 +66,7 @@
                     <div class="form-group">
                         @Html.LabelFor(model => model.CCExpMonth, htmlAttributes: new { @class = "control-label col-md-2" })
                         <div class="col-md-10">
-                            @Html.EditorFor(model => model.CCExpMonth, new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.DropDownListFor(model => model.CCExpMonth, new SelectList(new List<string>() { "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12" }), new { @class = "form-control" })
                             @Html.ValidationMessageFor(model => model.CCExpMonth, "", new { @class = "text-danger" })
                         </div>
                     </div>
@@ -75,7 +75,14 @@
                     <div class="form-group">
                         @Html.LabelFor(model => model.CCExpYear, htmlAttributes: new { @class = "control-label col-md-2" })
                         <div class="col-md-10">
-                            @Html.EditorFor(model => model.CCExpYear, new { htmlAttributes = new { @class = "form-control" } })
+                            @{ 
+                                var years = new List<string>();
+                                for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 10; i++)
+                                {
+                                    years.Add(i.ToString());
+                                }
+                                }
+                                @Html.DropDownListFor(model => model.CCExpYear, new SelectList(years), new { @class = "form-control" })
                             @Html.ValidationMessageFor(model => model.CCExpYear, "", new { @class = "text-danger" })
                         </div>
                     </div>

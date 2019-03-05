@@ -21,8 +21,8 @@ namespace InfraManagement.Database.Entity
         public string Notes { get; set; }
         public int TaskType { get; set; }
         public bool IsLRP { get; set; }
-
         public string Predecessor { get; set; }
+        public DateTime UpdateTime { get; set; }
 
     }
 }

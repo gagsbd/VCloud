@@ -27,7 +27,7 @@ namespace InfraManagement.Database
 
         public int CreateOrg(OrgEntity org)
         {
-           
+            org.UpdateTime = DateTime.Now;
             this.Org.Add(org);
             this.SaveChanges();
             return org.Id;
@@ -41,7 +41,7 @@ namespace InfraManagement.Database
         }
         public int CreateTask(TaskEntity task)
         {
-            
+            task.UpdateTime = DateTime.Now;
             this.Task.Add(task);
             this.SaveChanges();
             return task.Id;
@@ -53,6 +53,7 @@ namespace InfraManagement.Database
 
             if (task != null)
             {
+                task.UpdateTime = DateTime.Now;
                 task.Status = newStatus;
             }
             this.SaveChanges();
@@ -74,7 +75,9 @@ namespace InfraManagement.Database
                     taskToUpdate.Status = task.Status;
                     taskToUpdate.StatusUrl = task.StatusUrl;
                     taskToUpdate.TaskType = task.TaskType;
-                    
+                    taskToUpdate.UpdateTime = DateTime.Now;
+
+
                 }
 
                 //this.Task.Add(task);  
@@ -105,6 +108,7 @@ namespace InfraManagement.Database
 
         public void UpdateOrg(OrgEntity org)
         {
+            org.UpdateTime = DateTime.Now;
             this.Org.Attach(org);
             this.Entry<OrgEntity>(org).Property(nameof(org.Cloud_TenantId)).IsModified = true;
             this.SaveChanges();

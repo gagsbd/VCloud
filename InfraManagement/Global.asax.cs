@@ -25,6 +25,7 @@ namespace InfraManagement
             var ex = Server.GetLastError();
             //log the error!
             System.Diagnostics.Trace.Write(ex);
+            
         }
     }
 }

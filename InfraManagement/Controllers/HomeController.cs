@@ -24,6 +24,7 @@ namespace InfraManagement.Controllers
         private ICloudService CloudService { get; set; }
         private ITenantDatabase DB { get; set; }
         private INotificationService NotificationService { get; set; }
+        private ILogger logger { get; set; }
 
         public enum TaskType
         {
@@ -43,27 +44,44 @@ namespace InfraManagement.Controllers
             filterContext.Result = new ViewResult { ViewName ="Error" };
         }
         public HomeController(IPaymentGateway paymentGateway, ICloudService cloudService,
-            ITenantDatabase db, INotificationService notificationService) // The constructor parameter is injected by the unity container. Check UnityConfig.cs
+            ITenantDatabase db, INotificationService notificationService,
+            ILogger logger) // The constructor parameter is injected by the unity container. Check UnityConfig.cs
         {
             this.PaymentGateway = paymentGateway;
             this.CloudService = cloudService;
             this.DB = db;
             this.NotificationService = notificationService;
+            this.logger = logger;
         }
 
+        /// <summary>
+        /// This is the default action called by the application.
+        /// This renders the view to collect the payment card infromation
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public ActionResult Index()
         {
+            //This view post the data to "Authorize action
             return View("CreatePaymentProfile", new PaymentCard());
         }
 
+        /// <summary>
+        /// Collects the data from create paymet profile
+        /// </summary>
+        /// <param name="card"></param>
+        /// <returns></returns>
         [HttpPost]
-        //[CaptchaVerify("Captcha is not valid")]
         public ActionResult Authorize(PaymentCard card)
         {
             try
             {
+                //Validate whether the entered captcha is valid.
+                //If Captcha is invalid it adds the error to model state, so nothgn needed  the code to show the error.
+                //Validation control takes care if showing the message.
                 var validcaptcha = this.IsCaptchaValid("Please enter the text as shown in the image.");
+                
+                //If the card expiry year is the current year make sure the month is later than or equal to current month
                 if ((card.CCExpYear == DateTime.Now.Year && card.CCExpMonth < DateTime.Now.Month) || card.CCExpYear < DateTime.Now.Year)
                 {
                     this.ModelState.AddModelError(nameof(card.CCExpMonth), "Expiry month is invalid.");
@@ -71,7 +89,10 @@ namespace InfraManagement.Controllers
                 }
                 if (this.ModelState.IsValid)
                 {
+                    //Make call to payment gateway to authorize the card, it returns id of the profile create on payent gateway.
                     var authResult = PaymentGateway?.Authorize(card);
+
+                    //if payment card is valid render the form/view the collect the organizatiion inforation.
                     if (authResult.IsAuthorized)
                     {
                         return View("CreateOrg", new OrgInfo()
@@ -82,24 +103,20 @@ namespace InfraManagement.Controllers
                             Address = new Address()
                         });
                     }
-                    else if (authResult.IsError)
+                    else if (authResult.IsError) 
                     {
                         ModelState.AddModelError(nameof(card.CCnumber), authResult.Error);
 
                     }
 
                 }
-                else
-                {
-
-
-                }
+               
+                //Will reach here if there are any errors or card is not authorized
                 return View("CreatePaymentProfile", card);
 
             }
             catch (Exception ex)
             {
-                //TODO: Log
                 WriteError(ex);
                 return View("Error");
             }
@@ -107,6 +124,11 @@ namespace InfraManagement.Controllers
         }
 
 
+        /// <summary>
+        /// CreateOrg view will post the data to this action.
+        /// </summary>
+        /// <param name="org"></param>
+        /// <returns></returns>
         [HttpPost]
         public ActionResult CreateOrg(OrgInfo org)
         {
@@ -118,27 +140,26 @@ namespace InfraManagement.Controllers
                 }
                 else
                 {
-                    var isUserAvaialble = this.CloudService.IsAdminUserAvaialbe(org.AdminName);
-                    if (!isUserAvaialble)
-                    {
-                        ModelState.AddModelError(nameof(org.AdminName), "Name already taken.");
-                        return View("CreateOrg", org);
-                    }
-                    //var tenantId = this.CloudService.CreateOrg(org);
-
+                                        
                     //Create org and tasks in database
 
+                    //Automapper is the a utility that converts on object to another.
+                    //In this case it creates OrgEntity useng instanc eof OrgInfo class.
+                    //You just have to make sure that the properties of the both classes are named same.
                     var dbOrg = AutoMapper.Mapper.Map<OrgEntity>(org);
-                    dbOrg.TenantId = Guid.NewGuid().ToString();   //This is a temporary id created to identify the org in the database.
-                                                                  //we will update this with the once created in org,  once it is created 
+
+
+                    dbOrg.TenantId = Guid.NewGuid().ToString();   //This is a  id created to identify the org in the database.
+                                                                  //This would be the we use to idenify the org ourside the system (web app) for e.g 
+                                                                  //int he query string or fields that is visible to user, for security reasong.
+                    //Saves data to database and returns the numeric id that is generated                                                    
                     var orgId = DB.CreateOrg(dbOrg);
 
-                    //Also create the tasks that need to be fullfilled
-                    //User the mater list of task
-
+                    //Also create the tasks that need to be fullfilled, in database that are ater processed
+                   
                     CreatTasks(orgId);
                    
-                    //return this.RedirectToAction("ProvisionVdc", new { tenantId = tenantId});
+                    //Renders the view that list the status of the tasks
                     return View("TasksStatus", null, dbOrg.TenantId);
                 }
             }
@@ -149,19 +170,12 @@ namespace InfraManagement.Controllers
             }
         }
 
-        //[HttpGet]
-        //public async Task<ActionResult> ProvisionVdc(string tenantId)
-        //{
-        //    await StartProvisioningVdc(tenantId);
-        //    return this.RedirectToAction("TaskStatus", new { tenantId = tenantId });
-        //}
-
-        //[HttpGet]
-        //public async Task<ActionResult> TaskStatus(string tenantId)
-        //{
-        //    await StartProvisioningVdc(tenantId);
-        //    return View("TasksStatus", null, tenantId);
-        //}
+        /// <summary>
+        /// This action returns the snapshot of the status of the tasks of the org.
+        /// This is used by the jquery in the TaskStatus view to regulary update the task status to user.
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <returns></returns>
 
         [HttpGet]
         public async Task<HtmlString> Tasks(string tenantId)
@@ -169,9 +183,9 @@ namespace InfraManagement.Controllers
             try
             {
 
-                await StartProvisioningVdc(tenantId);
+                //await StartProvisioningVdc(tenantId);
 
-                var org = DB.GetOrgByTenantId(tenantId);
+                var org = await Task.FromResult(DB.GetOrgByTenantId(tenantId));
 
                 if (org == null)
                 {
@@ -216,7 +230,7 @@ namespace InfraManagement.Controllers
             catch (Exception ex)
             {
                 WriteError(ex);
-                throw;
+                throw new Exception("Something went wrong");
             }
         }
 
@@ -234,7 +248,7 @@ namespace InfraManagement.Controllers
             bool result = true;
             try
             {
-                return CloudService.IsOrgNameAvailable(orgName);
+                return await Task.FromResult(CloudService.IsOrgNameAvailable(orgName));
             }
             catch (Exception ex)
             {
@@ -259,16 +273,44 @@ namespace InfraManagement.Controllers
             return result;
         }
 
+
+        /// <summary>
+        /// This action is an option to resume the tasks that are not completed.
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <returns></returns>
         [HttpGet]
         public async Task<ActionResult> ResumeTasks(string tenantId)
         {
-            //await StartProvisioningVdc(tenantId);
-            return View("TasksStatus", null, tenantId);
+            return await Task.FromResult( View("TasksStatus", null, tenantId));
         }
 
+
+        /// <summary>
+        /// This action is called by the jquery in TaskStatus view to run the tasks
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<string> ProcessTasks(string tenantId)
+        {
+            
+            try
+            {
+                await StartProvisioningVdc(tenantId);
+                return "Done";
+            }
+            catch (Exception ex)
+            {
+                WriteError(ex);
+            }
+
+            return "Something went wrong";
+        }
         [HttpGet]
         public ActionResult ShowOrg()
         {
+
             return View("CreateOrg", new OrgInfo());
         }
         // Helper functions
@@ -279,21 +321,27 @@ namespace InfraManagement.Controllers
         /// <param name="ex"></param>
         private void WriteError(Exception ex)
         {
-            Write(ex, "Error");
+            this.logger.Error(ex.Message, ex);
         }
 
+
+        /// <summary>
+        /// Creates list of tasks that needs to be completed as part of provisioning an org
+        /// </summary>
+        /// <param name="orgId"></param>
+        /// <returns></returns>
         private List<TaskEntity> CreatTasks(int orgId)
         {
             List<TaskEntity> result = new List<TaskEntity>();
             //1. Create Org
             result.Add(new TaskEntity { Name = "Create Org", TaskCode = "CREATE_ORG", OrgId = orgId, Status = "Not Started", TaskType = (int)TaskType.CreateOrg });
             //2. Enable Org
-            result.Add(new TaskEntity { Name = "Enable Org", TaskCode = "ENABLE_ORG", OrgId = orgId, Status = "Not Started", TaskType = (int)TaskType.EnableOrg });
+            result.Add(new TaskEntity { Name = "Enable Org", TaskCode = "ENABLE_ORG", OrgId = orgId, Status = "Not Started", TaskType = (int)TaskType.EnableOrg , Predecessor= "CREATE_ORG"});
             //3. Create admin user
-            result.Add(new TaskEntity { Name = "Create Admin User", TaskCode = "CREATE_ADM_USR", OrgId = orgId, Status = "Not Started", TaskType = (int)TaskType.CreateAdmin });
+            result.Add(new TaskEntity { Name = "Create Admin User", TaskCode = "CREATE_ADM_USR", OrgId = orgId, Status = "Not Started", TaskType = (int)TaskType.CreateAdmin, Predecessor = "CREATE_ORG" });
 
             //4. Create vdc
-            result.Add(new TaskEntity { Name = "Create VDC", OrgId = orgId, TaskCode = "CREATE_VDC", Status = "Not Started", TaskType = (int)TaskType.CreateVDC, IsLRP = true });
+            result.Add(new TaskEntity { Name = "Create VDC", OrgId = orgId, TaskCode = "CREATE_VDC", Status = "Not Started", TaskType = (int)TaskType.CreateVDC, IsLRP = true, Predecessor = "ENABLE_ORG" });
 
             //5. Create catalog
             result.Add(new TaskEntity { Name = "Create Catalog", OrgId = orgId, TaskCode = "CREATE_CATLOG", Status = "Not Started", TaskType = (int)TaskType.CreateCatalog, Predecessor = "CREATE_VDC" });
@@ -302,9 +350,11 @@ namespace InfraManagement.Controllers
             //6. Upgrade to Advanced gateway
             result.Add(new TaskEntity { Name = "Upgrade to Advanced Gateway", OrgId = orgId, TaskCode = "UPDATE_GATEWAY", Status = "Not Started", TaskType = (int)TaskType.UpgradeGateWay, IsLRP = true, Predecessor = "CREATE_VDC" });
 
-            //7. Save Information
-            result.Add(new TaskEntity { Name = "Send Notificatuib", OrgId = orgId, TaskCode = "NOTIFY", Status = "Not Started", TaskType = (int)TaskType.SendNotification, Predecessor = "UPDATE_GATEWAY" });
+            //7. Send notification
+            result.Add(new TaskEntity { Name = "Send Notification", OrgId = orgId, TaskCode = "NOTIFY", Status = "Not Started", TaskType = (int)TaskType.SendNotification, Predecessor = "UPDATE_GATEWAY" });
 
+
+            //Save taks to database
             foreach (var item in result)
             {
                 DB.CreateTask(item);
@@ -313,7 +363,13 @@ namespace InfraManagement.Controllers
             return result;
         }
 
-        private async System.Threading.Tasks.Task<List<TaskEntity>> StartProvisioningVdc(string tenantId)
+        /// <summary>
+        /// This function retrives the taks list form database and kicks of a task that is note yet started, once it has met its dependecies
+        /// 
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <returns></returns>
+        private async Task<List<TaskEntity>> StartProvisioningVdc(string tenantId)
         {
             var org = DB.GetOrgByTenantId(tenantId);
 
@@ -322,9 +378,7 @@ namespace InfraManagement.Controllers
                 return null;
             }
             var pendingTasks = DB.GetOrgTasks(org.Id);
-            string orgHref = Session["current_org_href"]?.ToString();
-            string email = Session["email"]?.ToString();
-
+            
             //Start the first task in the list that has not been stated yet
 
             var taskToStart = pendingTasks.FirstOrDefault<TaskEntity>(t => t.Status != "Completed" && t.Status != "Error");
@@ -344,7 +398,12 @@ namespace InfraManagement.Controllers
 
         }
 
-
+        /// <summary>
+        /// This looks at the tasks type and starts or get the update of the task and updates the database
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="org"></param>
+        /// <param name="taskList"></param>
         private void ExecuteTask(TaskEntity task, OrgEntity org, List<TaskEntity> taskList)
         {
             if (task == null)
@@ -376,7 +435,7 @@ namespace InfraManagement.Controllers
                         }
                     case TaskType.EnableOrg:
                         {
-                            //var tenantId = this.CloudService.CreateOrg(org);
+                           
                             DB.UpdateTaskStatus(org.Id, (int)TaskType.EnableOrg, "Running");
                             CloudService.EnableOrg(org.Cloud_TenantId);
                             DB.UpdateTaskStatus(org.Id, (int)TaskType.EnableOrg, "Completed");
@@ -416,7 +475,7 @@ namespace InfraManagement.Controllers
                             {
                                 DB.UpdateTaskStatus(org.Id, (int)TaskType.CreateCatalog, "Running");
                                 var adminUserHref = CloudService.CreateCatalog(org.Cloud_TenantId);
-                                DB.UpdateTaskStatus(task.Id, (int)TaskType.CreateCatalog, "Completed");
+                                DB.UpdateTaskStatus(org.Id, (int)TaskType.CreateCatalog, "Completed");
                             }
                             break;
                         }
@@ -456,7 +515,7 @@ namespace InfraManagement.Controllers
             catch (HttpException hex)
             {
                 WriteError(hex);
-                //This si mostliey error from api , flag the status as error
+                //This is mostly error from api , flag the status as error
                 task.Status = "Error";
                 task.Notes = hex.Message;
                 DB.UpdateTask(task);
