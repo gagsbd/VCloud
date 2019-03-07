@@ -318,7 +318,7 @@ namespace InfraManagement.Services
             try
             {
                 var xmldata = @"<?xml version='1.0' encoding='UTF-8'?>
-                                <vcloud:AdminCatalog xmlns:vcloud='http://www.vmware.com/vcloud/v1.5' name='Catalog" + Guid.NewGuid().ToString().Replace("-", "") + @"' >
+                                <vcloud:AdminCatalog xmlns:vcloud='http://www.vmware.com/vcloud/v1.5' name='Catalog' >
                                     <vcloud:Description>Catalog</vcloud:Description>
                                 </vcloud:AdminCatalog>";
 
