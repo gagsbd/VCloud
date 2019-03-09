@@ -40,7 +40,7 @@
         $.ajax(
             {
                 url: "Tasks?tenantId=" + $("#tenantId").val(),
-                async:false
+                async:true
             }
         ).done(
             
@@ -55,7 +55,7 @@
     function setCountdown() {
         setInterval(function () {
             var tntId = $("#tenantId").val()
-            $("#countDown").html("Status will refresh in " + remainignSeconds + " secs.<br/> Click <a href='ResumeTasks?tenantId=" + tntId + " >here</a> to refresh.");
+            $("#countDown").html("Status will refresh in " + remainignSeconds + " secs.<br/> Click <a href='ResumeTasks?tenantId=" + tntId + "' >here</a> to refresh.");
             remainignSeconds--;
             if (remainignSeconds == 0) {
                 updateStatus();
@@ -68,7 +68,7 @@
             $.ajax(
                 {
                     url: "ProcessTasks?tenantId=" + $("#tenantId").val(),
-                    async: false
+                    async: true
                 }
             )
         }, 15000);
