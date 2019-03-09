@@ -8,6 +8,10 @@
     
         <h2 class="text-danger">Something went wrong.</h2>
         <p>An error occurred while processing your request.</p>
-    
+    @{ 
+        var ex = Server.GetLastError();
+    }
+    @ex.ToString();
+    @ex.StackTrace;
 </body>
 </html>
