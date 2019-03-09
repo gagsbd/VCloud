@@ -37,12 +37,12 @@ namespace InfraManagement.Controllers
             SendNotification = 500
         }
 
-        protected override void OnException(ExceptionContext filterContext)
-        {
-            filterContext.ExceptionHandled = true;
-            WriteError(filterContext.Exception);
-            filterContext.Result = new ViewResult { ViewName ="Error" };
-        }
+        ////protected override void OnException(ExceptionContext filterContext)
+        ////{
+        ////    filterContext.ExceptionHandled = true;
+        ////    WriteError(filterContext.Exception);
+        ////    filterContext.Result = new ViewResult { ViewName = "Error" };
+        ////}
         public HomeController(IPaymentGateway paymentGateway, ICloudService cloudService,
             ITenantDatabase db, INotificationService notificationService,
             ILogger logger) // The constructor parameter is injected by the unity container. Check UnityConfig.cs
@@ -118,7 +118,7 @@ namespace InfraManagement.Controllers
             catch (Exception ex)
             {
                 WriteError(ex);
-                return View("Error");
+               // return View("Error");
             }
 
         }
@@ -166,7 +166,7 @@ namespace InfraManagement.Controllers
             catch (Exception ex)
             {
                 WriteError(ex);
-                return View("Error");
+               // return View("Error");
             }
         }
 
