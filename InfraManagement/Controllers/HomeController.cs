@@ -120,7 +120,7 @@ namespace InfraManagement.Controllers
                 WriteError(ex);
                // return View("Error");
             }
-
+            return View("CreatePaymentProfile", card);
         }
 
 
@@ -166,7 +166,8 @@ namespace InfraManagement.Controllers
             catch (Exception ex)
             {
                 WriteError(ex);
-               // return View("Error");
+                // return View("Error");
+                throw;
             }
         }
 
