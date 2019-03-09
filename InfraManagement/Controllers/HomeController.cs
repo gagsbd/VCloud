@@ -227,7 +227,7 @@ namespace InfraManagement.Controllers
                 if (allDone)
                 {
                     html.Append("<script language='javascript'>");
-                    html.Append("document.location='Summary'");
+                    html.Append("document.location='Summary?tenantId=" + org.TenantId + "'");
                     html.Append("</script>");
 
                 }
