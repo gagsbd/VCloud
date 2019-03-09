@@ -54,22 +54,23 @@
 
     function setCountdown() {
         setInterval(function () {
-            $("#countDown").html("Status will refresh in " + remainignSeconds + " secs.<br/> Click <a href='ResumeTasks?tenantId='" + $("#tenantId").val() + "' >here</a> to refresh.");
+            var tntId = $("#tenantId").val()
+            $("#countDown").html("Status will refresh in " + remainignSeconds + " secs.<br/> Click <a href='ResumeTasks?tenantId=" + tntId + " >here</a> to refresh.");
             remainignSeconds--;
             if (remainignSeconds == 0) {
                 updateStatus();
                 remainignSeconds = 30;
             }
 
-            if (remainignSeconds % 15 == 0)
-            {
-                $.ajax(
-                    {
-                        url: "ProcessTasks?tenantId=" + $("#tenantId").val(),
-                        async: false
-                    }
-                )
-            }
         }, 1000)
+
+        setInterval(function () {
+            $.ajax(
+                {
+                    url: "ProcessTasks?tenantId=" + $("#tenantId").val(),
+                    async: false
+                }
+            )
+        }, 15000);
     }
 </script>
