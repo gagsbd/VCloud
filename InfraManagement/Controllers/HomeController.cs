@@ -385,7 +385,7 @@ namespace InfraManagement.Controllers
         /// </summary>
         /// <param name="tenantId"></param>
         /// <returns></returns>
-        private async Task<List<TaskEntity>> StartProvisioningVdc(string tenantId)
+        private List<TaskEntity> StartProvisioningVdc(string tenantId)
         {
             var org = DB.GetOrgByTenantId(tenantId);
 
@@ -410,7 +410,7 @@ namespace InfraManagement.Controllers
    
             }
 
-            return await Task.FromResult(pendingTasks);
+            return pendingTasks;
 
         }
 
