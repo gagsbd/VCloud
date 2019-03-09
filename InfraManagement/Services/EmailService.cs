@@ -14,7 +14,7 @@ namespace InfraManagement.Services
         {
            // MailMessage msg = new MailMessage("do_not_reply@liveitcg.com", sendTo);
             MailMessage msg = new MailMessage();
-            msg.To.Add("gags@mailinator.com");  
+            msg.To.Add(sendTo);  
             msg.Body = message;
             msg.BodyEncoding = Encoding.UTF8;
             msg.IsBodyHtml = true;
