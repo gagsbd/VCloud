@@ -593,7 +593,7 @@ namespace InfraManagement.Controllers
 
         private void SendSuccessNotification(SummaryInfo summaryInfo, string emailAddress)
         {
-            if (!String.IsNullOrEmpty(org.EmailAddress))
+            if (!String.IsNullOrEmpty(emailAddress))
             {
                 var message = @"<h2>Thank you !</h2>
                                                 <p>
