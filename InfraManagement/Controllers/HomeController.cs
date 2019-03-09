@@ -37,12 +37,12 @@ namespace InfraManagement.Controllers
             SendNotification = 500
         }
 
-        ////protected override void OnException(ExceptionContext filterContext)
-        ////{
-        ////    filterContext.ExceptionHandled = true;
-        ////    WriteError(filterContext.Exception);
-        ////    filterContext.Result = new ViewResult { ViewName = "Error" };
-        ////}
+        protected override void OnException(ExceptionContext filterContext)
+        {
+            filterContext.ExceptionHandled = true;
+            WriteError(filterContext.Exception);
+            filterContext.Result = new ViewResult { ViewName = "Error" };
+        }
         public HomeController(IPaymentGateway paymentGateway, ICloudService cloudService,
             ITenantDatabase db, INotificationService notificationService,
             ILogger logger) // The constructor parameter is injected by the unity container. Check UnityConfig.cs
@@ -118,9 +118,9 @@ namespace InfraManagement.Controllers
             catch (Exception ex)
             {
                 WriteError(ex);
-               // return View("Error");
+                return View("Error");
             }
-            return View("CreatePaymentProfile", card);
+         
         }
 
 
@@ -166,8 +166,7 @@ namespace InfraManagement.Controllers
             catch (Exception ex)
             {
                 WriteError(ex);
-                // return View("Error");
-                throw;
+                return View("Error"); 
             }
         }
 
@@ -239,7 +238,7 @@ namespace InfraManagement.Controllers
             catch (Exception ex)
             {
                 WriteError(ex);
-                throw new Exception("Something went wrong");
+                return new HtmlString("Something went wrong");
             }
         }
 
@@ -289,6 +288,7 @@ namespace InfraManagement.Controllers
             catch (Exception ex)
             {
                 WriteError(ex);
+
             }
             return result;
         }
@@ -327,12 +327,7 @@ namespace InfraManagement.Controllers
 
             return "Something went wrong";
         }
-        [HttpGet]
-        public ActionResult ShowOrg()
-        {
-
-            return View("CreateOrg", new OrgInfo());
-        }
+       
         // Helper functions
 
         /// <summary>
@@ -342,6 +337,7 @@ namespace InfraManagement.Controllers
         private void WriteError(Exception ex)
         {
             this.logger.Error(ex.Message, ex);
+            
         }
 
 

@@ -22,10 +22,10 @@ namespace InfraManagement
 
         protected void Application_Error()
         {
-           // var ex = Server.GetLastError();
+            var ex = Server.GetLastError();
             //log the error!
-           // System.Diagnostics.Trace.Write(ex);
-            
+            System.Diagnostics.Trace.Write(ex);
+
         }
     }
 }
