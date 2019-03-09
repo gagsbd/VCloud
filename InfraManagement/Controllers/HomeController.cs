@@ -197,12 +197,13 @@ namespace InfraManagement.Controllers
                 StringBuilder html = new StringBuilder("<table class='table'><tr><th>Task Name</th><th>Task Status</th><th></th></tr>");
                 string statusIcon = "";
 
-
+                bool allDone = true;
                 foreach (var item in taskList)
                 {
                     if (item.Status == "Running")
                     {
                         statusIcon = "<img style='width:20px;height:20px' src='/images/settings.png'>";
+                        allDone = false;
                     }
                     else if (item.Status == "Completed")
                     {
@@ -211,21 +212,28 @@ namespace InfraManagement.Controllers
                     else if (item.Status == "Error")
                     {
                         statusIcon = "<img style='width:20px;height:20px' src='/images/error.png'>";
+                        allDone = false;
                     }
                     else
                     {
+                        allDone = false;
                         statusIcon = "<img style='width:20px;height:20px' src='/images/play-button.png'>";
                     }
-
-
+                    
                     html.Append(String.Format(@"<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>", item.Name, item.Status, statusIcon));
                 }
 
-                html.Append("</html>");
+                if (allDone)
+                {
+                    html.Append("<script language='javascript'>");
+                    html.Append("document.location='Summary'");
+                    html.Append("</script>");
+
+                }
+                html.Append("</table>");
                 result = new HtmlString(html.ToString());
                 return result;
-
-
+                
             }
             catch (Exception ex)
             {
@@ -234,6 +242,17 @@ namespace InfraManagement.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<ActionResult> Summary(string tenantId)
+        {
+            
+            var orgInfo = DB.GetOrgByTenantId(tenantId);
+            return await Task.FromResult(View("Summary", new SummaryInfo { Url=CloudService.GetServerUrl() + "/tenant/" + orgInfo.CompanyShortName,
+                                                                           UserName = orgInfo.AdminName,
+                                                                           SupportEmail= "support@liveitcg.com",
+                                                                           SupportPhone= "817.590.9650"
+                                                                          }));
+            }
 
         /// <summary>
         /// Checks whethe the organization name is availavle to use
@@ -503,8 +522,15 @@ namespace InfraManagement.Controllers
                         {
                             if (CanStartTask(task, taskList))
                             {
+                                
                                 DB.UpdateTaskStatus(org.Id, (int)TaskType.SendNotification, "Completed");
-                                this.SendSuccessNotification(org.EmailAddress);
+                                this.SendSuccessNotification(new SummaryInfo
+                                {
+                                    Url = CloudService.GetServerUrl() + "/tenant/" + org.CompanyShortName,
+                                    UserName = org.AdminName,
+                                    SupportEmail = "support@liveitcg.com",
+                                    SupportPhone = "817.590.9650"
+                                },org.EmailAddress);
                             }
                             break;
                         }
@@ -565,11 +591,22 @@ namespace InfraManagement.Controllers
             DB.UpdateTask(task);
         }
 
-        private void SendSuccessNotification(string email)
+        private void SendSuccessNotification(SummaryInfo summaryInfo, string emailAddress)
         {
-            if (!String.IsNullOrEmpty(email))
+            if (!String.IsNullOrEmpty(org.EmailAddress))
             {
-                var sendNotfication = new Task(() => this.NotificationService.Send("Your VDC Creation status.", "Sucess", email));
+                var message = @"<h2>Thank you !</h2>
+                                                <p>
+                                                    Thank you for signing up with us! Please save this information for you to login and use your services.<br />
+                                                </p>
+                                                <p>
+                                                    <b>Login Portal:</b> " +  summaryInfo.Url + @"<br />
+                                                    <b>UserID:</b>" + summaryInfo.UserName + @"<br />
+                                                    <b>Password:</b> The password you used for service, if you don't remember, that's ok, let us know by contacting support and we can reset the password for you.
+                                                </p>
+
+                                                For Support you can email us at " + summaryInfo.SupportEmail + " or give us a call at " + summaryInfo.SupportPhone + " option 1.";
+                var sendNotfication = new Task(() => this.NotificationService.Send("LiveIT Cloud Virtual Datacenter Information", message,  emailAddress));
                 sendNotfication.Start();
             }
         }

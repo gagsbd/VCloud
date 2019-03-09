@@ -9,6 +9,7 @@ namespace InfraManagement.Services
 {
     public interface ICloudService
     {
+        string GetServerUrl();
         string Authentiate();
         string CreateOrg(OrgInfo newOrg);
         string CreateAdminUser(string tenantId, string emailAddress,string userName,string password);

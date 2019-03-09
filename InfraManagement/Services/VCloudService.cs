@@ -513,6 +513,11 @@ namespace InfraManagement.Services
                 request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
             }
         }
+
+        public string GetServerUrl()
+        {
+            return this.EndPoint;
+        }
     }
 
 

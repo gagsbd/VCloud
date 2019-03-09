@@ -44,6 +44,11 @@ namespace InfraManagement.Services
             throw new NotImplementedException();
         }
 
+        public string GetServerUrl()
+        {
+            throw new NotImplementedException();
+        }
+
         public string GetTaskStatus(string taskEndPoint)
         {
             return "Completed";

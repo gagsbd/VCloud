@@ -1,0 +1,18 @@
+﻿@model InfraManagement.Models.SummaryInfo
+
+@{
+    ViewBag.Title = "Summary";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Thank you !</h2>
+<p>
+    Thank you for signing up with us! Please save this information for you to login and use your services.<br />
+</p>
+<p>
+    <b>Login Portal:</b> @Model.Url<br />
+    <b>UserID:</b> @Model.UserName<br />
+    <b>Password:</b> The password you used for service, if you don't remember, that's ok, let us know by contacting support and we can reset the password for you.
+</p>
+
+For Support you can email us at @Model.SupportEmail or give us a call at @Model.SupportPhone option 1.
