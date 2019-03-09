@@ -312,12 +312,12 @@ namespace InfraManagement.Controllers
         /// <param name="tenantId"></param>
         /// <returns></returns>
         [HttpGet]
-        public async Task<string> ProcessTasks(string tenantId)
+        public string ProcessTasks(string tenantId)
         {
             
             try
             {
-                await StartProvisioningVdc(tenantId);
+                StartProvisioningVdc(tenantId);
                 return "Done";
             }
             catch (Exception ex)
